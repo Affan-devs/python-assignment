@@ -1,44 +1,70 @@
-import re 
+import re
 import random
-random_number = random.randint(1, 5)
-random_special = random.choice(['!', '@', '#', '$', '%', '^', '&', '*'])
+import streamlit as st
+
+# Streamlit UI
+st.set_page_config(page_title="Password Strength Checker", page_icon="🔐")
+st.title("🔐 Password Strength Checker")
+st.markdown("Check how strong your password is and get suggestions to improve it.")
+
 def check_password_strength(password):
     score = 0
-    
+    suggestions = []
+
+    # Generate random additions for suggestions
+    random_number = random.randint(1, 9)
+    random_special = random.choice(['!', '@', '#', '$', '%', '^', '&', '*'])
+
+    # Check password length
     if len(password) >= 8:
         score += 1
     else:
-        print("❌ Password should be at least 8 characters long.")
+        suggestions.append("🔴 Your password should be **at least 8 characters** long.")
 
-
+    # Check for uppercase and lowercase letters
     if re.search(r"[A-Z]", password) and re.search(r"[a-z]", password):
         score += 1
     else:
-        print("❌ Include both uppercase and lowercase letters.")
-    
+        suggestions.append("🔴 Include **both uppercase and lowercase** letters.")
 
+    # Check for at least one digit
     if re.search(r"\d", password):
         score += 1
     else:
-        print("❌ Add at least one number (0-9).")
-        result = password + str(random_number)
-        print(f"You can have password like this {result}")
-    
+        suggestions.append("🔴 Add **at least one number (0-9)**.")
+        suggestions.append(f"💡 Try this: `{password}{random_number}`")
+
+    # Check for at least one special character
     if re.search(r"[!@#$%^&*]", password):
         score += 1
     else:
-        print("❌ Include at least one special character (!@#$%^&*).")
-        result = password[:1] + str(random_special)
-        print(f"You can have password like this {result}")
-    
-    if score == 4:
-        print("✅ Strong Password!")
-        print(password)
-    elif score == 3:
-        print("⚠️ Moderate Password - Consider adding more security features.")
+        suggestions.append("🔴 Add **at least one special character** (!@#$%^&*).")
+        suggestions.append(f"💡 Try this: `{password[:1]}{random_special}{password[1:]}`")
+
+    return score, suggestions
+
+
+
+# Input field
+password = st.text_input("Enter your password", type="password")
+
+# Button
+if st.button("Check Strength"):
+    if password:
+        score, suggestions = check_password_strength(password)
+
+        # Display feedback
+        for tip in suggestions:
+            st.write(tip)
+
+        # Final message
+        if score == 4:
+            st.success("✅ Strong Password!")
+            st.code(password)
+        elif score == 3:
+            st.warning("⚠️ Moderate Password - Consider improving it for more security.")
+        else:
+            st.error("❌ Weak Password - Please improve it using the above suggestions.")
+            st.code("Avoid simple passwords like: password123")
     else:
-        print("❌ Weak Password - Improve it using the suggestions above.")
-        error =password = 'password123'
-        print(f"You can't have password like this {error}")
-password = input("Enter your password: ")
-check_password_strength(password)
+        st.warning("⚠️ Please enter a password to evaluate.")
